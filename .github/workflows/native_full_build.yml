@@ -24,7 +24,10 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends libsafec-dev
-          test -f /usr/include/safec/safec_lib.h
+          SAFEC_HEADER="$(dpkg -L libsafec-dev | grep -m1 '/safec_lib\.h$')"
+          test -n "$SAFEC_HEADER"
+          test -f "$SAFEC_HEADER"
+          echo "Found Safe C header at: $SAFEC_HEADER"
 
       - name: native build
         run: |
