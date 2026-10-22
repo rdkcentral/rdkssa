@@ -10,7 +10,7 @@ ls -la ${GITHUB_WORKSPACE}
 # Install build dependencies
 echo "Installing build dependencies..."
 apt-get update
-apt-get install -y libsafec libsafec-dev pkg-config
+apt-get install -y libsafec-dev pkg-config
 
 # Verify safec installation and find its locations
 echo "Verifying safec installation..."
