@@ -10,16 +10,20 @@ ls -la ${GITHUB_WORKSPACE}
 # Install build dependencies
 echo "Installing build dependencies..."
 apt-get update
-apt-get install -y libsafec-dev
+apt-get install -y libsafec libsafec-dev pkg-config
 
-# Check if safec headers are installed
-echo "Checking for safec_lib.h..."
-if [ -f "/usr/include/safec/safec_lib.h" ]; then
-    echo "Found safec_lib.h at /usr/include/safec/"
-elif [ -f "/usr/include/safec_lib.h" ]; then
-    echo "Found safec_lib.h at /usr/include/"
+# Verify safec installation and find its locations
+echo "Verifying safec installation..."
+if pkg-config --exists libsafec; then
+    echo "Found libsafec via pkg-config"
+    SAFEC_CFLAGS=$(pkg-config --cflags libsafec)
+    SAFEC_LIBS=$(pkg-config --libs libsafec)
+    echo "SAFEC_CFLAGS: $SAFEC_CFLAGS"
+    echo "SAFEC_LIBS: $SAFEC_LIBS"
 else
-    echo "Warning: safec_lib.h not found in standard locations"
+    echo "Warning: libsafec not found via pkg-config, using default paths"
+    SAFEC_CFLAGS="-I/usr/include/safec"
+    SAFEC_LIBS="-lsafec"
 fi
 
 ############################
@@ -35,10 +39,10 @@ autoreconf -i
 echo "Running configure..."
 ./configure \
     --prefix="${GITHUB_WORKSPACE}/install/usr" \
-    CPPFLAGS="-I/usr/include/safec" \
+    CPPFLAGS="$SAFEC_CFLAGS" \
     CFLAGS="-fvisibility=default" \
     CXXFLAGS="-fvisibility=default" \
-    LDFLAGS="-lsafec"
+    LIBS="$SAFEC_LIBS"
 
 echo "Building with make..."
 make
@@ -49,4 +53,3 @@ make install
 echo "======================================================================================"
 echo "Build completed successfully"
 exit 0
-
