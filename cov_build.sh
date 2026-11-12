@@ -36,25 +36,24 @@ apt-get install -y libsafec-dev 2>/dev/null || {
     }
 }
 
-# Verify SafeC installation
+# Verify SafeC installation and get correct paths via pkg-config
 echo "Checking SafeC installation..."
-SAFEC_HEADER=$(find /usr -name "safec_lib.h" -type f 2>/dev/null | head -1)
-if [ -n "$SAFEC_HEADER" ]; then
-    SAFEC_PATH=$(dirname "$SAFEC_HEADER")
-    echo "Found SafeC headers at: $SAFEC_PATH"
-    SAFEC_FLAGS="-I${SAFEC_PATH}"
-else
-    echo "WARNING: SafeC headers not found via find, checking standard locations..."
-    if [ -f "/usr/include/safec_lib.h" ]; then
-        echo "Found at /usr/include/safec_lib.h"
-        SAFEC_FLAGS=""
-    elif [ -f "/usr/include/safec/safec_lib.h" ]; then
-        echo "Found at /usr/include/safec/safec_lib.h"
-        SAFEC_FLAGS="-I/usr/include/safec"
+if command -v pkg-config &> /dev/null; then
+    echo "Using pkg-config to find SafeC..."
+    SAFEC_CFLAGS=$(pkg-config --cflags libsafec 2>/dev/null || echo "")
+    SAFEC_LIBS=$(pkg-config --libs libsafec 2>/dev/null || echo "-lsafec")
+    if [ -n "$SAFEC_CFLAGS" ]; then
+        echo "SafeC CFLAGS: $SAFEC_CFLAGS"
+        echo "SafeC LIBS: $SAFEC_LIBS"
     else
-        echo "SafeC headers not found in standard locations"
-        SAFEC_FLAGS=""
+        echo "pkg-config failed, falling back to defaults"
+        SAFEC_CFLAGS="-I/usr/include"
+        SAFEC_LIBS="-lsafec"
     fi
+else
+    echo "pkg-config not found, using defaults"
+    SAFEC_CFLAGS="-I/usr/include"
+    SAFEC_LIBS="-lsafec"
 fi
 
 # Check for SafeC libraries
@@ -75,11 +74,11 @@ autoreconf -i
 echo "Running configure..."
 ./configure \
     --prefix="${GITHUB_WORKSPACE}/install/usr" \
-    CPPFLAGS="-I/usr/include/safec" \
+    CPPFLAGS="${SAFEC_CFLAGS}" \	
     CFLAGS="-fvisibility=default" \
     CXXFLAGS="-fvisibility=default" \
 	LDFLAGS="-L/usr/lib -L/usr/local/lib" \
-    LIBS="-lsafec"
+    LIBS="${SAFEC_LIBS}"
 
 echo "Building with make..."
 make
