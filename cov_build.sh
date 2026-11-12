@@ -12,25 +12,46 @@ echo "Installing build tools and dependencies..."
 apt-get update
 apt-get install -y build-essential autoconf automake libtool pkg-config
 
-# SafeC library (check if available)
-echo "Checking for SafeC library..."
-if apt-cache search libsafec-dev >/dev/null 2>&1; then
-    apt-get install -y libsafec-dev
-fi
+# Try to find and install SafeC
+echo "Looking for SafeC library..."
 
-# Check if SafeC headers exist
-if [ -f "/usr/include/safec/safec_lib.h" ]; then
-    echo "SafeC headers found at /usr/include/safec/"
-    SAFEC_FLAGS="-I/usr/include/safec"
-elif [ -f "/usr/include/safec_lib.h" ]; then
-    echo "SafeC headers found at /usr/include/"
-    SAFEC_FLAGS=""
+# Check available SafeC packages
+echo "Available SafeC packages:"
+apt-cache search safec || true
+
+# Try installing libsafec-dev
+echo "Attempting to install libsafec-dev..."
+apt-get install -y libsafec-dev 2>/dev/null || {
+    echo "libsafec-dev not found in standard repos, checking for alternative packages..."
+    apt-get install -y libsafec 2>/dev/null || {
+        echo "WARNING: SafeC package not found, attempting to build from source..."
+        cd /tmp
+        git clone https://github.com/rdkcentral/safec.git 2>/dev/null || git clone https://github.com/intel/safec.git || true
+        if [ -d "/tmp/safec" ]; then
+            cd /tmp/safec
+            make -j$(nproc) || make || true
+            make install || true
+            cd ${GITHUB_WORKSPACE}
+        fi
+    }
+}
+
+# Verify SafeC installation
+echo "Checking SafeC installation..."
+if find /usr -name "safec_lib.h" 2>/dev/null | head -1; then
+    SAFEC_PATH=$(find /usr -name "safec_lib.h" 2>/dev/null | head -1 | xargs dirname)
+    echo "Found SafeC headers at: $SAFEC_PATH"
+    SAFEC_FLAGS="-I${SAFEC_PATH}"
 else
-    echo "WARNING: SafeC headers not found, attempting to locate..."
-    find /usr -name "safec_lib.h" 2>/dev/null || true
+    echo "WARNING: SafeC headers not found"
     SAFEC_FLAGS=""
 fi
 
+# Check for SafeC libraries
+if find /usr -name "libsafec*" 2>/dev/null | head -1; then
+    echo "Found SafeC libraries:"
+    find /usr -name "libsafec*" 2>/dev/null || true
+fi
 ############################
 # Build rdkssa
 echo "building rdkssa"
@@ -47,6 +68,7 @@ echo "Running configure..."
     CPPFLAGS="-I/usr/include/safec" \
     CFLAGS="-fvisibility=default" \
     CXXFLAGS="-fvisibility=default" \
+	LDFLAGS="-L/usr/lib -L/usr/local/lib" \
     LIBS="-lsafec"
 
 echo "Building with make..."
