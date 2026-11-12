@@ -72,12 +72,13 @@ echo "Running autoreconf..."
 autoreconf -i
 
 echo "Running configure..."
+export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
 ./configure \
     --prefix="${GITHUB_WORKSPACE}/install/usr" \
-    CPPFLAGS="${SAFEC_CFLAGS}" \	
+    CPPFLAGS="${SAFEC_CFLAGS}" \
     CFLAGS="-fvisibility=default" \
     CXXFLAGS="-fvisibility=default" \
-	LDFLAGS="-L/usr/lib -L/usr/local/lib" \
+    LDFLAGS="-L/usr/lib/x86_64-linux-gnu" \
     LIBS="${SAFEC_LIBS}"
 
 echo "Building with make..."
