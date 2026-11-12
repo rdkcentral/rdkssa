@@ -1,0 +1,24 @@
+name: Native Build
+
+on:
+  push:
+    branches: [ "develop", "main", "sprint*", "release*" ]
+  pull_request:
+    branches: [ "develop", "main", "sprint*", "release*" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rdkcentral/docker-rdk-ci:latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build
+      run: |
+        chmod +x cov_build.sh
+        ./cov_build.sh
