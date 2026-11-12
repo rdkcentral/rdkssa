@@ -19,4 +19,6 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Build
-      run: ./cov_build.sh
+      run: |
+        chmod +x cov_build.sh
+        ./cov_build.sh
