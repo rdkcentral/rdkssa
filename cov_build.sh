@@ -7,12 +7,6 @@ GITHUB_WORKSPACE="${PWD}"
 ls -la ${GITHUB_WORKSPACE}
 
 ############################
-# Install build dependencies
-echo "Installing build dependencies..."
-apt-get update
-apt-get install -y libsafec libsafec-dev
-
-############################
 # Build rdkssa
 echo "building rdkssa"
 
