@@ -7,6 +7,12 @@ GITHUB_WORKSPACE="${PWD}"
 ls -la ${GITHUB_WORKSPACE}
 
 ############################
+# Install build tools
+echo "Installing build tools..."
+apt-get update
+apt-get install -y build-essential autoconf automake libtool pkg-config
+
+############################
 # Build rdkssa
 echo "building rdkssa"
 
