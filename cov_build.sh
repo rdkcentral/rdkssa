@@ -38,13 +38,23 @@ apt-get install -y libsafec-dev 2>/dev/null || {
 
 # Verify SafeC installation
 echo "Checking SafeC installation..."
-if find /usr -name "safec_lib.h" 2>/dev/null | head -1; then
-    SAFEC_PATH=$(find /usr -name "safec_lib.h" 2>/dev/null | head -1 | xargs dirname)
+SAFEC_HEADER=$(find /usr -name "safec_lib.h" -type f 2>/dev/null | head -1)
+if [ -n "$SAFEC_HEADER" ]; then
+    SAFEC_PATH=$(dirname "$SAFEC_HEADER")
     echo "Found SafeC headers at: $SAFEC_PATH"
     SAFEC_FLAGS="-I${SAFEC_PATH}"
 else
-    echo "WARNING: SafeC headers not found"
-    SAFEC_FLAGS=""
+    echo "WARNING: SafeC headers not found via find, checking standard locations..."
+    if [ -f "/usr/include/safec_lib.h" ]; then
+        echo "Found at /usr/include/safec_lib.h"
+        SAFEC_FLAGS=""
+    elif [ -f "/usr/include/safec/safec_lib.h" ]; then
+        echo "Found at /usr/include/safec/safec_lib.h"
+        SAFEC_FLAGS="-I/usr/include/safec"
+    else
+        echo "SafeC headers not found in standard locations"
+        SAFEC_FLAGS=""
+    fi
 fi
 
 # Check for SafeC libraries
