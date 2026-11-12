@@ -56,6 +56,11 @@ else
     SAFEC_LIBS="-lsafec"
 fi
 
+# List actual SafeC header files for debugging
+echo "Locating SafeC header files..."
+find /usr/include -name "*safec*" -o -name "*safec_lib*" 2>/dev/null || echo "No header files found"
+ls -la /usr/include/safeclib/ 2>/dev/null || echo "safeclib directory not found"
+
 # Check for SafeC libraries
 if find /usr -name "libsafec*" 2>/dev/null | head -1; then
     echo "Found SafeC libraries:"
